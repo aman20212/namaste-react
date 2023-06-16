@@ -1,11 +1,36 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
-import resData from '../utils/restautantData';
+import { API_URL } from '../utils/constant';
 import RestaurantCard from './RestaurantCard';
+import Shimmer from "./Shimmer";
+import { Link } from 'react-router-dom';
+
+function filterData(searchText, allRestaurants) {
+    const filterData = allRestaurants.filter((restaurant) =>
+        restaurant?.data?.name?.toLowerCase().includes(searchText.toLowerCase())
+    );
+    return filterData;
+}
 
 const Body = () => {
 
-    const [restaurantsData, setRestaurantsData] = useState(resData);
+    const [allRestaurants, setAllRestaurants] = useState([]);
+    const [filteredRestaurants, setFilteredRestaurants] = useState([]);
+    const [searchText, setSearchText] = useState("");
+
+    useEffect(() => {
+        fetchData();
+    }, [])
+
+    const fetchData = async () => {
+        const data = await fetch(API_URL);
+        const json = await data.json();
+        setAllRestaurants(json?.data?.cards[2]?.data?.data?.cards);
+        setFilteredRestaurants(json?.data?.cards[2]?.data?.data?.cards);
+    }
+
+    if (!allRestaurants) return null;
+
 
     return (
         <main className="main__content">
@@ -13,32 +38,49 @@ const Body = () => {
                 <div className="filter__row">
                     <button
                         className="filter__btn"
-                        onClick={() => {
-                            setRestaurantsData(resData);
-                        }}
+                        onClick={() => console.log("Relevance")}
                     >
                         Relevance
                     </button>
 
                     <button
                         className="filter__btn"
-                        onClick={() => {
-                            const filteredData = restaurantsData.filter(
-                                (res) => res.data.avgRating > 4
-                            )
-                            setRestaurantsData(filteredData);
-                        }}
+                        onClick={() => console.log("Top Rated Restaurant")}
                     >
                         Top Rated Restaurant
                     </button>
                 </div>
-                <input type="text" className="search" placeholder="Search" />
+                <input
+                    type="text"
+                    className="search"
+                    placeholder="Search"
+                    value={searchText}
+                    onChange={(e) => {
+                        setSearchText(e.target.value);
+                        const data = filterData(searchText, allRestaurants);
+                        e.target.value === "" ? setFilteredRestaurants(allRestaurants) : setFilteredRestaurants(data);
+                    }}
+                />
             </div>
-            <div className="res__container res__card__container">
-                {
-                    restaurantsData.map((restaurant) => <RestaurantCard key={restaurant.data.id} restData={restaurant} />)
-                }
-            </div>
+
+            {
+                allRestaurants?.length === 0 ? (
+                    <div className="shimmer__container">
+                        <Shimmer image={true} cards={15} lines={3} width={260} />
+                    </div>
+                ) : (
+                    <div className="res__container res__card__container">
+                        {
+                            filteredRestaurants?.length === 0 ? <h2 className='nores__error'>No Restaurant Found, Search Other Restaurant 🤗</h2>
+                                :
+                                filteredRestaurants?.map((restaurant) => {
+                                    return <Link to={"/restaurant/" + restaurant.data.id} key={restaurant.data.id}><RestaurantCard {...restaurant.data} /></Link>
+                                    // return <RestaurantCard {...restaurant.data} />
+                                })
+                        }
+                    </div>
+                )
+            }
         </main>
     );
 };
