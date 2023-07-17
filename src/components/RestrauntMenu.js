@@ -24,7 +24,7 @@ const RestaurantMenu = () => {
         <main className="main__content container">
             <br />
             {
-                menuData.length === 0 ? <Shimmer image={false} cards={1} lines={1} width={700} /> : <h1>Restaurant - {menuData.name}</h1>
+                menuData.length === 0 ? <Shimmer image={false} cards={1} lines={1} width={700} /> : <h1>Restaurant - {menuData?.name}</h1>
             }
         </main>
     )
